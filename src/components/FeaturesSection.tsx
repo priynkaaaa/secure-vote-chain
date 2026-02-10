@@ -28,19 +28,6 @@ export const FeaturesSection = () => {
   return (
     <section className="py-24">
       <div className="container mx-auto px-4">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          className="text-center mb-16"
-        >
-          <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
-            Why Blockchain Voting?
-          </h2>
-          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Leveraging distributed ledger technology to create the most secure voting system ever designed
-          </p>
-        </motion.div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           {features.map((feature, index) => (
