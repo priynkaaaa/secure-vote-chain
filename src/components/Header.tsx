@@ -3,7 +3,8 @@ import { motion } from "framer-motion";
 import { Shield, Menu, X, LogOut, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
-import { useVotingStore } from "@/store/votingStore";
+import { useAuth } from "@/hooks/useAuth";
+import { useVoter } from "@/hooks/useVoter";
 
 const navLinks = [
   { href: "/", label: "Home" },
@@ -16,7 +17,8 @@ const navLinks = [
 export const Header = () => {
   const location = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const { isAuthenticated, currentVoter, logout } = useVotingStore();
+  const { user, signOut } = useAuth();
+  const { data: voter } = useVoter();
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-xl border-b border-border">
@@ -29,7 +31,6 @@ export const Header = () => {
             <span className="font-bold text-xl text-foreground">BlockVote</span>
           </Link>
 
-          {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center gap-1">
             {navLinks.map((link) => (
               <Link
@@ -46,17 +47,16 @@ export const Header = () => {
             ))}
           </nav>
 
-          {/* Auth Section */}
           <div className="hidden md:flex items-center gap-3">
-            {isAuthenticated ? (
+            {user ? (
               <>
                 <div className="flex items-center gap-2 px-3 py-1.5 bg-success/10 rounded-lg">
                   <User className="w-4 h-4 text-success" />
                   <span className="text-sm font-medium text-success">
-                    {currentVoter?.name}
+                    {voter?.name || user.email}
                   </span>
                 </div>
-                <Button variant="ghost" size="sm" onClick={logout}>
+                <Button variant="ghost" size="sm" onClick={signOut}>
                   <LogOut className="w-4 h-4" />
                   Logout
                 </Button>
@@ -70,25 +70,18 @@ export const Header = () => {
             )}
           </div>
 
-          {/* Mobile Menu Button */}
           <button
             className="md:hidden p-2"
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
           >
-            {mobileMenuOpen ? (
-              <X className="w-6 h-6" />
-            ) : (
-              <Menu className="w-6 h-6" />
-            )}
+            {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
           </button>
         </div>
 
-        {/* Mobile Menu */}
         {mobileMenuOpen && (
           <motion.div
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
             className="md:hidden py-4 border-t border-border"
           >
             <nav className="flex flex-col gap-2">
@@ -107,8 +100,8 @@ export const Header = () => {
                 </Link>
               ))}
               <div className="pt-4 border-t border-border mt-2">
-                {isAuthenticated ? (
-                  <Button variant="ghost" className="w-full" onClick={logout}>
+                {user ? (
+                  <Button variant="ghost" className="w-full" onClick={signOut}>
                     <LogOut className="w-4 h-4 mr-2" />
                     Logout
                   </Button>
