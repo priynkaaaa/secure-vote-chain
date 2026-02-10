@@ -5,23 +5,26 @@ import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { useVotingStore } from "@/store/votingStore";
-import { 
-  UserPlus, 
-  IdCard, 
-  Mail, 
-  Phone, 
-  User, 
+import { useAuth } from "@/hooks/useAuth";
+import { useRegisterVoter } from "@/hooks/useVoter";
+import {
+  UserPlus,
+  IdCard,
+  Mail,
+  Phone,
+  User,
   CheckCircle2,
   AlertCircle,
   ArrowRight,
-  Shield
+  Shield,
+  Lock,
 } from "lucide-react";
 import { toast } from "sonner";
 
 const Register = () => {
   const navigate = useNavigate();
-  const { registerVoter } = useVotingStore();
+  const { signUp, user } = useAuth();
+  const registerVoter = useRegisterVoter();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
@@ -29,28 +32,33 @@ const Register = () => {
     aadhaarNumber: "",
     email: "",
     phone: "",
+    password: "",
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
-    
+
     if (!formData.name.trim()) newErrors.name = "Name is required";
     if (!formData.voterId.trim()) newErrors.voterId = "Voter ID is required";
-    else if (!/^[A-Z]{3}\d{7}$/i.test(formData.voterId)) 
+    else if (!/^[A-Z]{3}\d{7}$/i.test(formData.voterId))
       newErrors.voterId = "Invalid Voter ID format (e.g., ABC1234567)";
-    
+
     if (!formData.aadhaarNumber.trim()) newErrors.aadhaarNumber = "Aadhaar number is required";
-    else if (!/^\d{12}$/.test(formData.aadhaarNumber)) 
+    else if (!/^\d{12}$/.test(formData.aadhaarNumber))
       newErrors.aadhaarNumber = "Aadhaar must be 12 digits";
-    
+
     if (!formData.email.trim()) newErrors.email = "Email is required";
-    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) 
+    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email))
       newErrors.email = "Invalid email format";
-    
+
     if (!formData.phone.trim()) newErrors.phone = "Phone number is required";
-    else if (!/^\d{10}$/.test(formData.phone)) 
+    else if (!/^\d{10}$/.test(formData.phone))
       newErrors.phone = "Phone must be 10 digits";
+
+    if (!formData.password.trim()) newErrors.password = "Password is required";
+    else if (formData.password.length < 6)
+      newErrors.password = "Password must be at least 6 characters";
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -58,34 +66,34 @@ const Register = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
     if (!validateForm()) return;
 
     setIsSubmitting(true);
 
-    // Simulate verification delay
-    await new Promise(resolve => setTimeout(resolve, 2000));
+    try {
+      // Step 1: Create auth account
+      const { error: authError } = await signUp(formData.email, formData.password);
+      if (authError) {
+        toast.error("Registration failed", { description: authError.message });
+        setIsSubmitting(false);
+        return;
+      }
 
-    const success = registerVoter(formData);
-
-    if (success) {
-      toast.success("Registration successful!", {
-        description: "You can now login to cast your vote.",
+      toast.success("Account created!", {
+        description: "Please check your email to verify your account, then log in to complete voter registration.",
       });
       navigate("/login");
-    } else {
-      toast.error("Registration failed", {
-        description: "Voter ID or Aadhaar already registered.",
-      });
+    } catch (err: any) {
+      toast.error("Registration failed", { description: err.message });
     }
 
     setIsSubmitting(false);
   };
 
   const handleChange = (field: string, value: string) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+    setFormData((prev) => ({ ...prev, [field]: value }));
     if (errors[field]) {
-      setErrors(prev => ({ ...prev, [field]: "" }));
+      setErrors((prev) => ({ ...prev, [field]: "" }));
     }
   };
 
@@ -220,14 +228,32 @@ const Register = () => {
                   </div>
                 </div>
 
+                <div>
+                  <label className="block text-sm font-medium text-foreground mb-2">
+                    <Lock className="w-4 h-4 inline mr-2" />
+                    Password
+                  </label>
+                  <Input
+                    type="password"
+                    placeholder="Minimum 6 characters"
+                    value={formData.password}
+                    onChange={(e) => handleChange("password", e.target.value)}
+                    className={errors.password ? "border-destructive" : ""}
+                  />
+                  {errors.password && (
+                    <p className="text-sm text-destructive mt-1 flex items-center gap-1">
+                      <AlertCircle className="w-4 h-4" /> {errors.password}
+                    </p>
+                  )}
+                </div>
+
                 <div className="bg-muted/50 rounded-xl p-4 border border-border">
                   <div className="flex items-start gap-3">
                     <CheckCircle2 className="w-5 h-5 text-success mt-0.5" />
                     <div className="text-sm">
                       <p className="font-medium text-foreground mb-1">Verification Process</p>
                       <p className="text-muted-foreground">
-                        Your details will be verified against the Election Authority database. 
-                        You'll receive an OTP for authentication during login.
+                        After registration, verify your email. Then log in to complete your voter profile setup.
                       </p>
                     </div>
                   </div>
@@ -243,7 +269,7 @@ const Register = () => {
                   {isSubmitting ? (
                     <>
                       <div className="w-5 h-5 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
-                      Verifying...
+                      Registering...
                     </>
                   ) : (
                     <>

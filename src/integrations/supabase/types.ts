@@ -14,7 +14,116 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      blockchain: {
+        Row: {
+          block_index: number
+          candidate_id: string | null
+          hash: string
+          id: string
+          is_valid: boolean
+          nonce: number
+          previous_hash: string
+          timestamp: string
+          vote_hash: string
+          voter_anonymous_id: string
+        }
+        Insert: {
+          block_index: number
+          candidate_id?: string | null
+          hash: string
+          id?: string
+          is_valid?: boolean
+          nonce?: number
+          previous_hash: string
+          timestamp?: string
+          vote_hash: string
+          voter_anonymous_id: string
+        }
+        Update: {
+          block_index?: number
+          candidate_id?: string | null
+          hash?: string
+          id?: string
+          is_valid?: boolean
+          nonce?: number
+          previous_hash?: string
+          timestamp?: string
+          vote_hash?: string
+          voter_anonymous_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "blockchain_candidate_id_fkey"
+            columns: ["candidate_id"]
+            isOneToOne: false
+            referencedRelation: "candidates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      candidates: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          party: string
+          symbol: string
+          votes: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          party: string
+          symbol: string
+          votes?: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          party?: string
+          symbol?: string
+          votes?: number
+        }
+        Relationships: []
+      }
+      voters: {
+        Row: {
+          aadhaar_number: string
+          email: string
+          has_voted: boolean
+          id: string
+          name: string
+          phone: string
+          registered_at: string
+          user_id: string
+          voter_id: string
+        }
+        Insert: {
+          aadhaar_number: string
+          email: string
+          has_voted?: boolean
+          id?: string
+          name: string
+          phone: string
+          registered_at?: string
+          user_id: string
+          voter_id: string
+        }
+        Update: {
+          aadhaar_number?: string
+          email?: string
+          has_voted?: boolean
+          id?: string
+          name?: string
+          phone?: string
+          registered_at?: string
+          user_id?: string
+          voter_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
